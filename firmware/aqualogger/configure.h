@@ -8,6 +8,11 @@
 #define ph4_button 9
 #define led 13
 
+
+#define ECPin A5
+#define ECGround  A3
+#define ECPower  A4
+
 /***************************************/
 
 /*******WHICH SENSORS TO USE***********/

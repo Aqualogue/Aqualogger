@@ -28,6 +28,8 @@ Bounce ph7debounce=Bounce();
 Bounce ph4debounce=Bounce();
 CalData caldata;//Calibration Voltages
 
+
+
 void setup(){
   Ethernet.begin(mac, ip);
   Serial.begin(115200);
@@ -45,6 +47,15 @@ void setup(){
   ph7debounce.interval(500);
   ph4debounce.attach(ph4_button);
   ph4debounce.interval(500);
+  
+  
+  /***EC****/
+  pinMode(ECPin,INPUT);
+  pinMode(ECPower,OUTPUT);//Setting pin for sourcing current
+  pinMode(ECGround,OUTPUT);//setting pin for sinking current
+  digitalWrite(ECGround,LOW);//We can leave the ground connected permanantly
+ 
+  /*********/
   
   
   /**********CALIBRATION**********/
@@ -85,6 +96,8 @@ void loop(){
   data = getpH(); // pH probe
   delay(5);
   data += "&"+getwatertemp(0); //submersible thermometer
+  delay(5);
+  data += "&"+GetEC(); //Includes ambient temp and humidity
   delay(5);
   data += "&"+getDHT(); //Includes ambient temp and humidity
 

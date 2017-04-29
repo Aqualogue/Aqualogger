@@ -171,7 +171,7 @@ struct CalData{
 /**********ONEWIRE TEMP*******************/
 
 #ifdef use_onewire
-  int watertemp;
+  float watertemp;
   
   OneWire oneWire(ONE_WIRE_BUS); 
   
@@ -201,3 +201,72 @@ struct CalData{
   } 
 #endif
 /******************************************/
+ 
+//##################################################################################
+//-----------  Do not Replace R1 with a resistor lower than 300 ohms    ------------
+//##################################################################################
+ 
+ 
+int R1= 1000;
+int Ra=25; //Resistance of powering Pins 
+
+  //** Adding Digital Pin Resistance to [25 ohm] to the static Resistor *********//
+  // Consule Read-Me for Why, or just accept it as true
+  
+//*************Compensating for temperature ************************************//
+//The value below will change depending on what chemical solution we are measuring
+//0.019 is generaly considered the standard for plant nutrients [google "Temperature compensation EC" for more info
+float TemperatureCoef = 0.019; //this changes depending on what chemical we are measuring
+ 
+ 
+ 
+//********************** Cell Constant For Ec Measurements *********************//
+//Mine was around 2.9 with plugs being a standard size they should all be around the same
+//But If you get bad readings you can use the calibration script and fluid to get a better estimate for K
+float K=2.88;
+  
+ 
+float Temperature=10;
+float EC=0;
+float EC25 =0;
+int ppm =0;
+ 
+ 
+float raw= 0;
+float Vin= 5;
+float Vdrop= 0;
+float Rc= 0;
+float buffer=0; 
+
+//******************************************* End of Setup **********************************************************************//
+ 
+//************ This Loop Is called From Main Loop************************//
+String GetEC(){
+String out = "ec=";
+
+Temperature=DHT.temperature;
+  R1=(R1+Ra);// Taking into acount Powering Pin Resitance
+
+//************Estimates Resistance of Liquid ****************//
+digitalWrite(ECPower,HIGH);
+raw= analogRead(ECPin);
+raw= analogRead(ECPin);// This is not a mistake, First reading will be low beause if charged a capacitor
+digitalWrite(ECPower,LOW);
+ 
+//***************** Converts to EC **************************//
+Vdrop= (Vin*raw)/1024.0;
+Rc=(Vdrop*R1)/(Vin-Vdrop);
+Rc=Rc-Ra; //acounting for Digital Pin Resitance
+EC = 1000/(Rc*K);
+ 
+//*************Compensating For Temperaure********************//
+
+EC25  =  EC/ (1+ TemperatureCoef*(Temperature-25.0));
+
+char str_EC25[10]; //needed for println to print float
+dtostrf(EC25, 4, 10, str_EC25); //might move to its own function
+out += str_EC25;
+return out;
+
+;}
+
